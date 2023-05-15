@@ -13,6 +13,8 @@ import com.google.gson.JsonSyntaxException
 
 object WebhookRoutes extends Http4sDsl[IO] {
 
+  sealed trait MissingStripeSignatureException extends Throwable
+
   private def eventHandler(eventType: String) =
     eventType match {
 
@@ -70,32 +72,42 @@ object WebhookRoutes extends Http4sDsl[IO] {
     }
 
   // This is your Stripe CLI webhook secret for testing your endpoint locally.
-  val endpointSecret = "whsec"
+  // val endpointSecret = IO("whsec")
 
   // The library needs to be configured with your account's secret key.
   // Ensure the key is kept out of any version control system you might be using
-  Stripe.apiKey =
-    "sk_test_"
+  // Stripe.apiKey ="sk_test_"
 
   // val webhookHandler= ???
   val stripeRoute = HttpRoutes.of[IO] { case request @ POST -> Root / "webhook" =>
     val payload = request.body.through(utf8.decode).compile.string
     val payload1 = request.bodyText.compile.string
     val sigHeader = request.headers.get(ci"Stripe-Signature").get.head
+
+    val sigHeader1 =
+      IO.fromOption(request.headers.get(ci"Stripe-Signature"))(
+        new MissingStripeSignatureException {}
+      )
     val event =
       for {
         body <- payload1
-        event <- IO.fromTry(Try(Webhook.constructEvent(body, sigHeader.value, endpointSecret)))
+        endpointSecret <- EndpointSecret.secret.load[IO]
+        apiKey <- StripeAPIKey.apiKey.load[IO]
+        _ = Stripe.apiKey = "sk_test_" + apiKey.value
+        event <- IO.fromTry(
+          Try(Webhook.constructEvent(body, sigHeader.value, endpointSecret.value))
+        )
       } yield event
 
     event
-      // .flatTap(ev => IO.println(ev))
+      .flatTap(ev => IO.println(ev))
       .flatMap(ev => eventHandler(ev.getType()))
-      .flatMap(_ => Ok.apply("webhook works just fine") // apply method produces F[Response[G]]
-      )
+      .flatMap(_ => Ok.apply("webhook works just fine")) // apply method produces F[Response[G]]
       .handleErrorWith {
-        case exception: SignatureVerificationException => BadRequest()
-        case exception: JsonSyntaxException            => BadRequest()
+        case exception: SignatureVerificationException  => BadRequest()
+        case exception: JsonSyntaxException             => BadRequest()
+        case exception: MissingStripeSignatureException => BadRequest()
+
       }
 
   }
