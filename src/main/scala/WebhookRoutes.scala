@@ -10,6 +10,11 @@ import com.stripe.net.Webhook
 import scala.util.Try
 import fs2.text.utf8
 import com.google.gson.JsonSyntaxException
+import org.http4s.multipart.Multipart
+import org.http4s.multipart.Multiparts
+import org.http4s.multipart.MultipartParser
+import org.http4s.multipart.MultipartDecoder
+import com.stripe.net.MultipartProcessor
 
 object WebhookRoutes extends Http4sDsl[IO] {
 
@@ -88,19 +93,29 @@ object WebhookRoutes extends Http4sDsl[IO] {
       IO.fromOption(request.headers.get(ci"Stripe-Signature"))(
         new MissingStripeSignatureException {}
       )
-    val event =
+    val event1 =
       for {
         body <- payload1
         endpointSecret <- EndpointSecret.secret.load[IO]
         apiKey <- StripeAPIKey.apiKey.load[IO]
-        _ = Stripe.apiKey = "sk_test_" + apiKey.value
         event <- IO.fromTry(
           Try(Webhook.constructEvent(body, sigHeader.value, endpointSecret.value))
         )
       } yield event
 
+    val event =
+      for {
+        body <- payload1
+        endpointSecret <- EndpointSecret.secret.load[IO]
+        header <- sigHeader1
+        apiKey <- StripeAPIKey.apiKey.load[IO]
+        _ <-IO(Stripe.apiKey = apiKey.value)
+        event <- IO(Webhook.constructEvent(body, header.head.value, endpointSecret.value))
+        
+      } yield event
+
     event
-      .flatTap(ev => IO.println(ev))
+      //.flatTap(ev => IO.println(ev))
       .flatMap(ev => eventHandler(ev.getType()))
       .flatMap(_ => Ok.apply("webhook works just fine")) // apply method produces F[Response[G]]
       .handleErrorWith {
@@ -111,5 +126,8 @@ object WebhookRoutes extends Http4sDsl[IO] {
       }
 
   }
-
+//Multiparts
+///MultipartParser
+//MultipartDecoder
+//MultipartProcessor
 }
