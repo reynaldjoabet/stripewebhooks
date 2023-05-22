@@ -47,3 +47,5 @@ lazy val root = (project in file("."))
       stripe
     )
   )
+
+  fork:=true  

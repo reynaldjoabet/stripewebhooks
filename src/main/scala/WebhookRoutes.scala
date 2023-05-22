@@ -118,7 +118,7 @@ object WebhookRoutes extends Http4sDsl[IO] {
       //.flatTap(ev => IO.println(ev))
       .flatMap(ev => eventHandler(ev.getType()))
       .flatMap(_ => Ok.apply("webhook works just fine")) // apply method produces F[Response[G]]
-      .handleErrorWith {
+      .recoverWith {
         case exception: SignatureVerificationException  => BadRequest()
         case exception: JsonSyntaxException             => BadRequest()
         case exception: MissingStripeSignatureException => BadRequest()
@@ -126,8 +126,5 @@ object WebhookRoutes extends Http4sDsl[IO] {
       }
 
   }
-//Multiparts
-///MultipartParser
-//MultipartDecoder
-//MultipartProcessor
+
 }
