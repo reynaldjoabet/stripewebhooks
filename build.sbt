@@ -32,7 +32,7 @@ val logback = "ch.qos.logback" % "logback-classic" % logbackVersion
 
 lazy val root = (project in file("."))
   .settings(
-    name := "Petstore-Http4s",
+    name := "StripeWebhooks",
     libraryDependencies ++= Seq(
       cirisCore,
       http4sDsl,

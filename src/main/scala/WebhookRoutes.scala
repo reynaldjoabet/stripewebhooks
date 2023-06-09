@@ -15,7 +15,11 @@ import org.http4s.multipart.Multiparts
 import org.http4s.multipart.MultipartParser
 import org.http4s.multipart.MultipartDecoder
 import com.stripe.net.MultipartProcessor
+import org.http4s.circe.CirceEntityDecoder._
 
+import org.http4s.circe.CirceEntityEncoder._
+import com.stripe.param.PaymentIntentCreateParams
+//import CreatePaymentIntent._
 object WebhookRoutes extends Http4sDsl[IO] {
 
   sealed trait MissingStripeSignatureException extends Throwable
@@ -84,7 +88,8 @@ object WebhookRoutes extends Http4sDsl[IO] {
   // Stripe.apiKey ="sk_test_"
 
   // val webhookHandler= ???
-  val stripeRoute = HttpRoutes.of[IO] { case request @ POST -> Root / "webhook" =>
+  val stripeRoute = HttpRoutes.of[IO] { 
+    case request @ POST -> Root / "webhook" =>
     val payload = request.body.through(utf8.decode).compile.string
     val payload1 = request.bodyText.compile.string
     val sigHeader = request.headers.get(ci"Stripe-Signature").get.head
@@ -124,6 +129,24 @@ object WebhookRoutes extends Http4sDsl[IO] {
         case exception: MissingStripeSignatureException => BadRequest()
 
       }
+
+      case request @ POST -> Root / "create-payment-intent" =>
+        request.as[CreatePaymentIntent]
+        .flatMap{payload=>
+            
+            val paymentIntentParams =PaymentIntentCreateParams
+                                            .builder()
+                                            .setAmount(23)
+                                            .setCurrency(payload.currency)
+                                            .addPaymentMethodType(payload.paymentMethod.head)//card
+                                            .build()
+              val paymentIntent=PaymentIntent.create(paymentIntentParams)                              
+
+            Ok(CreatePaymentIntentResponse(paymentIntent.getClientSecret()))
+        }
+
+       
+                          
 
   }
 

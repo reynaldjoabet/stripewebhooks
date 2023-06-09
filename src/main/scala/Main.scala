@@ -7,6 +7,7 @@ import org.http4s.server.Server
 import org.typelevel.log4cats.{Logger, SelfAwareStructuredLogger }
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 import org.typelevel.log4cats.LoggerName
+import io.circe
 
 object Main extends IOApp {
 //implicit val loggerName=LoggerName("name")
@@ -20,7 +21,9 @@ private def showEmberBanner[F[_]: Logger](s: Server): F[Unit] =
     .withHttpApp(WebhookRoutes.stripeRoute.orNotFound)
     .withPort(port"8080")
     .withHost(host"127.0.0.1")
+    //.withLogger(logger)
     // .withTLS()
+    //.withHostOption()
     .build
     .evalTap(showEmberBanner[IO])
     .useForever
