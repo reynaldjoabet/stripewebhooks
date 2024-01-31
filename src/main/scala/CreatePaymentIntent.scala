@@ -4,7 +4,7 @@ import cats.effect.IO
 
 final case class CreatePaymentIntent(
   amount: Int,
-  paymentMethod: Set[String],
+  paymentMethods: List[StripePaymentMethodType],
   currency: String
 )
 
