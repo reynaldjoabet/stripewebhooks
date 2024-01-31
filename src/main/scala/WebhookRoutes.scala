@@ -16,7 +16,7 @@ import org.http4s.multipart.MultipartParser
 import org.http4s.multipart.MultipartDecoder
 import com.stripe.net.MultipartProcessor
 import org.http4s.circe.CirceEntityDecoder._
-
+import org.http4s.circe.streamJsonArrayEncoder
 import org.http4s.circe.CirceEntityEncoder._
 import com.stripe.param.PaymentIntentCreateParams
 
@@ -25,6 +25,14 @@ import cats.effect.std.Console
 import cats.effect.kernel.Async
 import cats.data.NonEmptyList
 import org.http4s.Header
+import scala.jdk.CollectionConverters._
+import cats.data.Kleisli
+import org.http4s.Request
+import org.http4s.headers.Authorization
+import org.http4s.BasicCredentials
+import org.http4s.Credentials.AuthParams
+import org.http4s.Credentials
+import cats.effect.syntax.all._
 
 //import CreatePaymentIntent._
 case class WebhookRoutes[F[_]: Async: Console](stripeCredentials: StripeCredentials)
@@ -34,8 +42,12 @@ case class WebhookRoutes[F[_]: Async: Console](stripeCredentials: StripeCredenti
 
   private def eventHandler(eventType: String) =
     eventType match {
-
-      case "balance.available" => Console[F].println(eventType)
+      // Stripe sends the payment_intent.succeeded event when a payment succeeds, and the payment_intent.payment_failed event when a payment fails.
+//use webhooks to monitor the payment_intent.succeeded event and handle its completion asynchronously
+      case "payment_intent.succeeded" =>
+        Console[F].println(eventType) // Fulfill the purchased goods or services
+      case "payment_intent.payment_failed" => Console[F].println(eventType)
+      case "balance.available"             => Console[F].println(eventType)
       // Then define and call a function to handle the event balance.available
 
       case "charge.captured" => Console[F].println(eventType)
@@ -106,6 +118,10 @@ case class WebhookRoutes[F[_]: Async: Console](stripeCredentials: StripeCredenti
         request.headers.get(ci"Stripe-Signature"),
         new MissingStripeSignatureException {}
       )
+      val sigHeader2 =
+        Async[F].raiseWhen(request.headers.get(ci"Stripe-Signature").isEmpty)(
+          new MissingStripeSignatureException {}
+        )
 
       val event1: F[Event] =
         for {
@@ -149,13 +165,46 @@ case class WebhookRoutes[F[_]: Async: Console](stripeCredentials: StripeCredenti
             .builder()
             .setAmount(23)
             .setCurrency(payload.currency)
-            .addPaymentMethodType(payload.paymentMethod.head) // card
+            // .addAllPaymentMethodType(payload.paymentMethods.map(_.toString()).asJava)
+            // .addPaymentMethodType(payload.paymentMethod.head.toString()) // card
+            .addAllPaymentMethodType(
+              List(
+                StripePaymentMethodType.alipay,
+                StripePaymentMethodType.paypal,
+                StripePaymentMethodType.cashapp,
+                StripePaymentMethodType.grabpay,
+                StripePaymentMethodType.promptpay,
+                StripePaymentMethodType.card
+              ).map(_.toString()).asJava
+            )
             .build()
           val paymentIntent = PaymentIntent.create(paymentIntentParams)
 
-          Ok(CreatePaymentIntentResponse(paymentIntent.getClientSecret()))
+          Ok(CreatePaymentIntentResponse(paymentIntent.getClientSecret())) // .map(_)
         }
+        .uncancelable
 
+  }
+
+  val authUser: Kleisli[F, Request[F], Either[String, String]] = Kleisli { req =>
+    val authHeader = req.headers.get[Authorization]
+    authHeader match {
+      case Some(Authorization(BasicCredentials(cred))) => Async[F].delay(Right("User found"))
+      case Some(_) => Async[F].delay(Left("No basic credentials"))
+      case None    => Async[F].delay(Left("unauthorized"))
+    }
+
+    authHeader match {
+      case None => ???
+      case Some(value) =>
+        value match {
+          case Authorization(credentials) =>
+            credentials match {
+              case AuthParams(authScheme, params)       => ???
+              case Credentials.Token(authScheme, token) => ???
+            }
+        }
+    }
   }
 
 }
