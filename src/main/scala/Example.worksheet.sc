@@ -21,3 +21,12 @@ val combinedLists: List[Int] = list1 |+| list2
 // Example 3: Using Applicative syntax
 val maybeInt: Option[Int] = 42.pure[Option]
 val maybeString: Option[String] = "hello".pure[Option]
+
+//In most cases all that's necessary to switch to using the new implicit scope instances is to replace cats.implicits._ imports with cats.syntax.all._ and delete any cats.instances imports.
+
+//The most significant change in the 2.2.0 release is that all Cats type class instances for standard library types are now available in implicit scope, and no longer have to be imported.
+
+1 match {
+  case 2 | 1 | 3 => " two or three"
+  case 4         => " four"
+}
