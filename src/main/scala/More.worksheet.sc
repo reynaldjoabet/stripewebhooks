@@ -40,3 +40,9 @@ import cats.instances.future
 MonadError
 
 Show[UUID].show(UUID.randomUUID())
+
+case class Person(name: String, age: Int)
+
+val person = Person("John", 12)
+
+val Person(name, age) = person

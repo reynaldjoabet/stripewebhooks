@@ -11,7 +11,7 @@ import io.circe
 
 object Main extends IOApp {
 //implicit val loggerName=LoggerName("name")
-  private implicit val logger = Slf4jLogger.getLogger[IO]
+  private implicit val logger: SelfAwareStructuredLogger[cats.effect.IO] = Slf4jLogger.getLogger[IO]
 
   private def showEmberBanner[F[_]: Logger](s: Server): F[Unit] = Logger[F].info(
     s"\n${Banner.mkString("\n")}\nHTTP Server started at ${s.address}"

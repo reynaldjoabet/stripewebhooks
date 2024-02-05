@@ -13,5 +13,5 @@ final case class AppConfig(
 )
 
 object AppConfig {
-  implicit val appConfigReader :ConfigReader[AppConfig] =deriveReader[AppConfig]
+  implicit val appConfigReader: ConfigReader[AppConfig] = deriveReader[AppConfig]
 }
