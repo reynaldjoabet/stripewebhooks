@@ -9,7 +9,7 @@ import com.stripe.{Stripe => TheStripe}
 import configs.StripeConfig
 
 import org.typelevel.log4cats.Logger
-
+import logging.syntax._
 import scala.jdk.OptionConverters._
 import scala.util.Try
 import com.stripe.model.PaymentIntent
@@ -49,7 +49,7 @@ class LiveStripe[F[_]: MonadThrow: Logger] private (
       .setSuccessUrl(s"$successUrl/$jobId") // YOUR_DOMAIN+'success.html'
       .setCancelUrl(cancelUrl) // YOUR_DOMAIN+'cancel.html'
       .setCustomerEmail(userEmail)
-      .setClientReferenceId(jobId)// from our database
+      .setClientReferenceId(jobId) // from our database
       .addLineItem(
         SessionCreateParams
           .LineItem
@@ -62,7 +62,7 @@ class LiveStripe[F[_]: MonadThrow: Logger] private (
       .pure[F]
       .map(params => Session.create(params))
       .map(_.some)
-      // .logError(error => s"Creating checkout session failed: $error")
+      .logError(error => s"Creating checkout session failed: $error")
       .recover { case _ => None }
 
   override def createPaymentIntent(amount: Long): F[Option[PaymentIntent]] =
@@ -72,21 +72,21 @@ class LiveStripe[F[_]: MonadThrow: Logger] private (
       .setReceiptEmail("hello@gmail.com")
       .setReturnUrl(successUrl)
       .setCurrency("USD")
-      
-      //.setCustomer()
+
+      // .setCustomer()
       // .putExtraParam()
       // .putMetadata()
       .build()
       .pure[F]
       .map(PaymentIntent.create(_))
       .map(_.some)
-      // .logError(error => s"Creating checkout session failed: $error")
+      .logError(error => s"Creating checkout session failed: $error")
       .recover { case _ => None }
 
   override def handleWebhookEvent[A](payload: String, signature: String, action: String => F[A])
     : F[Option[A]] = MonadThrow[F]
     .fromTry(Try(Webhook.constructEvent(payload, signature, webhookSecret)))
-    // .logError(e => s"Stripe security verification failed - possibly fake attempt")
+    .logError(e => s"Stripe security verification failed - possibly fake attempt")
     .flatMap { event =>
       event.getType() match {
         case "checkout.session.completed" | "checkout.session.async_payment_succeeded" =>
@@ -107,14 +107,14 @@ class LiveStripe[F[_]: MonadThrow: Logger] private (
             // .map(action)
             // .sequence
             .traverse(action) // sequence and map= traverse
-
-        //   .log(
-        //     {
-        //       case None    => s"Event ${event.getId()} not producing any effect - check Stripe dashboard"
-        //       case Some(v) => s"Event ${event.getId()} fully paid"
-        //     },
-        //     e => s"Webhook action failed: $e"
-        //   )
+            .log(
+              {
+                case None =>
+                  s"Event ${event.getId()} not producing any effect - check Stripe dashboard"
+                case Some(v) => s"Event ${event.getId()} fully paid"
+              },
+              e => s"Webhook action failed: $e"
+            )
         case "checkout.session.async_payment_succeededs" =>
           event
             .getDataObjectDeserializer()
