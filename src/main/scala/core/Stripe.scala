@@ -98,8 +98,8 @@ class LiveStripe[F[_]: MonadThrow: Logger] private (
 
           session
             .map(_.getPaymentStatus() == "paid")
-            .flatMap { status =>
-              if (status)
+            .flatMap { paid =>
+              if (paid)
                 session.map(_.getClientReferenceId())
               else
                 None

@@ -46,3 +46,6 @@ case class Person(name: String, age: Int)
 val person = Person("John", 12)
 
 val Person(name, age) = person
+
+
+"CACF51660E6BF90F4E63B8A45BADF2756D9D9160E7FC926A6FB9A641B068A99E-1708603042997-071242F4C84B06FA522B6F84D9D36710F5E16BF7".length()
