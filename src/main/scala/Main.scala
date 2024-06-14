@@ -1,17 +1,19 @@
-import cats.effect.ExitCode
 import cats.effect._
-import org.http4s.ember.server.EmberServerBuilder
+import cats.effect.ExitCode
+
 import com.comcast.ip4s._
+import io.circe
+import org.http4s.ember.server.EmberServerBuilder
 import org.http4s.server.defaults.Banner
 import org.http4s.server.Server
 import org.typelevel.log4cats.{Logger, SelfAwareStructuredLogger}
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 import org.typelevel.log4cats.LoggerName
-import io.circe
 
 object Main extends IOApp {
+
 //implicit val loggerName=LoggerName("name")
-  private implicit val logger: SelfAwareStructuredLogger[cats.effect.IO] = Slf4jLogger.getLogger[IO]
+  implicit private val logger: SelfAwareStructuredLogger[cats.effect.IO] = Slf4jLogger.getLogger[IO]
 
   private def showEmberBanner[F[_]: Logger](s: Server): F[Unit] = Logger[F].info(
     s"\n${Banner.mkString("\n")}\nHTTP Server started at ${s.address}"
@@ -29,9 +31,7 @@ object Main extends IOApp {
         // .withLogger(logger)
         // .withTLS()
         // .withHostOption()
-        .build
-        .evalTap(showEmberBanner[IO])
-        .useForever
+        .build.evalTap(showEmberBanner[IO]).useForever
     }
     .as(ExitCode.Success)
 

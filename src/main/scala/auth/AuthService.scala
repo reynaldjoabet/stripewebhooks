@@ -1,35 +1,41 @@
 package auth
 
-import com.auth0.jwt.algorithms.Algorithm
-import com.auth0.jwt.{JWT, JWTVerifier}
-import com.password4j.{Argon2Function, Password}
-import cats.syntax.all._
-import cats.effect.syntax.all._
-
 import java.time.{Duration, Instant}
 import java.util.UUID
+
 import scala.util.{Failure, Success, Try}
+
 import cats.effect.kernel.Async
-import cats.Monad
-import cats.effect.Sync
 import cats.effect.std.Console
+import cats.effect.syntax.all._
+import cats.effect.Sync
+import cats.syntax.all._
+import cats.Monad
+
+import com.auth0.jwt.{JWT, JWTVerifier}
+import com.auth0.jwt.algorithms.Algorithm
+import com.password4j.{Argon2Function, Password}
 
 sealed abstract class AuthService[F[_]: Sync: Console]() {
+
   def encryptPassword(password: String): F[String] = PasswordHashing.encryptPassword(password)
+
   def verifyPassword(password: String, passwordHash: String): F[Unit] = PasswordHashing
     .verifyPassword(password, passwordHash)
-  def generateJwt(email: String): F[String] = Jwt.generate(email)
+
+  def generateJwt(email: String): F[String]  = Jwt.generate(email)
   def verifyJwt(jwtToken: String): F[String] = Jwt.verify(jwtToken)
 
   private object PasswordHashing {
-    private final val MemoryInKib = 12
-    private final val NumberOfIterations = 20
-    private final val LevelOfParallelism = 2
-    private final val LengthOfTheFinalHash = 32
-    private final val Type = com.password4j.types.Argon2.ID
-    private final val Version = 19
 
-    private final val Argon2: Argon2Function = Argon2Function.getInstance(
+    final private val MemoryInKib          = 12
+    final private val NumberOfIterations   = 20
+    final private val LevelOfParallelism   = 2
+    final private val LengthOfTheFinalHash = 32
+    final private val Type                 = com.password4j.types.Argon2.ID
+    final private val Version              = 19
+
+    final private val Argon2: Argon2Function = Argon2Function.getInstance(
       MemoryInKib,
       NumberOfIterations,
       LevelOfParallelism,
@@ -42,8 +48,8 @@ sealed abstract class AuthService[F[_]: Sync: Console]() {
       Password.hash(password).`with`(Argon2).getResult
     )
 
-    def verifyPassword(password: String, passwordHash: String): F[Unit] = (Sync[F]
-      .delay(Password.check(password, passwordHash) `with` Argon2))
+    def verifyPassword(password: String, passwordHash: String): F[Unit] = Sync[F]
+      .delay(Password.check(password, passwordHash).`with`(Argon2))
       .flatTap(res => Console[F].println(res))
       .ifM(ifTrue = Sync[F].delay(()), ifFalse = Sync[F].raiseError(new Exception("Unauthorized")))
     // .flatMap(res=> if(res)Sync[F].delay(()) else Sync[F].raiseError(new Exception("Unauthorized")))
@@ -51,11 +57,12 @@ sealed abstract class AuthService[F[_]: Sync: Console]() {
   }
 
   private object Jwt {
-    private final val Issuer = "SoftwareMill"
-    private final val ClaimName = "userEmail"
 
-    private final val algorithm: Algorithm = Algorithm.HMAC256("hello")
-    private final val verifier: JWTVerifier = JWT.require(algorithm).withIssuer(Issuer).build()
+    final private val Issuer    = "SoftwareMill"
+    final private val ClaimName = "userEmail"
+
+    final private val algorithm: Algorithm  = Algorithm.HMAC256("hello")
+    final private val verifier: JWTVerifier = JWT.require(algorithm).withIssuer(Issuer).build()
 
     def generate(email: String): F[String] = {
       val now: Instant = Instant.now()
@@ -70,7 +77,7 @@ sealed abstract class AuthService[F[_]: Sync: Console]() {
           .sign(algorithm)
       ) match {
         case Success(createdJwt) => Sync[F].delay(createdJwt)
-        case _ => Sync[F].raiseError(new RuntimeException("Problem with JWT generation!"))
+        case _                   => Sync[F].raiseError(new RuntimeException("Problem with JWT generation!"))
       }
     }
 

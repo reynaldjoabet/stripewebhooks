@@ -1,6 +1,6 @@
-import ciris._
-
 import cats.syntax.all._
+
+import ciris._
 
 final case class StripeCredentials(
   apiKey: Secret[String],

@@ -2,9 +2,9 @@ package configs
 
 import com.comcast.ip4s.Host
 import com.comcast.ip4s.Port
-import pureconfig.ConfigReader
 import pureconfig.error.CannotConvert
 import pureconfig.generic.semiauto.deriveReader
+import pureconfig.ConfigReader
 
 final case class EmberConfig(host: Host, port: Port)
 

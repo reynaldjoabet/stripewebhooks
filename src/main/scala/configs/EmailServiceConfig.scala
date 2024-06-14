@@ -1,7 +1,7 @@
 package configs
 
-import pureconfig.ConfigReader
 import pureconfig.generic.semiauto.deriveReader
+import pureconfig.ConfigReader
 
 final case class EmailServiceConfig(
   host: String,
@@ -13,6 +13,8 @@ final case class EmailServiceConfig(
 )
 
 object EmailServiceConfig {
+
   implicit val emailServiceConfigReader: ConfigReader[EmailServiceConfig] =
     deriveReader[EmailServiceConfig]
+
 }

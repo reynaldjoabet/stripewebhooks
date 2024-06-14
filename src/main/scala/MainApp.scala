@@ -1,7 +1,8 @@
 import scala.concurrent.duration.FiniteDuration
-import pureconfig.generic.auto._
-import pureconfig._
+
 import configs._
+import pureconfig._
+import pureconfig.generic.auto._
 
 object MainApp extends App {
 
@@ -14,7 +15,7 @@ object MainApp extends App {
     timeout: FiniteDuration
   )
 
-  val kafkaConf = ConfigSource.default.at("kafka").load[KafkaConfig]
+  val kafkaConf  = ConfigSource.default.at("kafka").load[KafkaConfig]
   val kafkaConf2 = ConfigSource.default.load[KafkaConfig]
 
   val securityConfig = ConfigSource.default.load[SecurityConfig]
@@ -28,8 +29,8 @@ object MainApp extends App {
 
   sealed trait AuthMethod
   case class Login(username: String, password: String) extends AuthMethod
-  case class Token(token: String) extends AuthMethod
-  case class PrivateKey(pkFile: java.io.File) extends AuthMethod
+  case class Token(token: String)                      extends AuthMethod
+  case class PrivateKey(pkFile: java.io.File)          extends AuthMethod
 
   case class ServiceConf(
     host: String,
@@ -57,4 +58,5 @@ object MainApp extends App {
 
   val token = ConfigSource.default.load[TokenConfig]
 //println(token)
+
 }

@@ -1,5 +1,5 @@
-import pureconfig.generic.auto._
 import pureconfig._
+import pureconfig.generic.auto._
 
 // case class Port(number: Int)
 
@@ -37,8 +37,8 @@ source.load[Conf]
 // reads a config and loads it into a `Conf` (throwing if not possible)
 source.loadOrThrow[Conf]
 
-import pureconfig.ConfigReader
 import pureconfig.generic.semiauto.deriveReader
+import pureconfig.ConfigReader
 
 final case class EmailServiceConfig(
   host: String,
@@ -50,8 +50,10 @@ final case class EmailServiceConfig(
 )
 
 object EmailServiceConfig {
+
   implicit val emailServiceConfigReader: ConfigReader[EmailServiceConfig] =
     deriveReader[EmailServiceConfig]
+
 }
 
 ConfigSource.default.load[EmailServiceConfig].toString()

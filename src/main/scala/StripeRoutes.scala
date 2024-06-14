@@ -1,26 +1,30 @@
-import domain._
-import domain.JobInfo._
+//import org.http4s.circe.CirceEntityDecoder.circeEntityDecoder
+
+import java.util.UUID
+
+import scala.language.implicitConversions
+
 import cats.effect._
-import cats.syntax.all._
-import core._
-//import cats.implicits._
-import com.google.gson.JsonSyntaxException
-import org.http4s._
-import org.http4s.circe.CirceEntityCodec._
-import org.http4s.server._
 import cats.effect.implicits._
 import cats.effect.syntax.all._
+import cats.syntax.all._
+
+//import cats.implicits._
+import com.google.gson.JsonSyntaxException
+import com.stripe.exception.SignatureVerificationException
+import core._
+import domain._
+import domain.JobInfo._
+import org.http4s._
+import org.http4s.circe.CirceEntityCodec._
+import org.http4s.dsl.Http4sDsl
+import org.http4s.server._
 import org.typelevel.ci.CIStringSyntax
 import org.typelevel.log4cats.Logger
-import com.stripe.exception.SignatureVerificationException
-//import org.http4s.circe.CirceEntityDecoder.circeEntityDecoder
-import java.util.UUID
-import scala.language.implicitConversions
-import org.http4s.dsl.Http4sDsl
 
 class StripeRoutes[F[_]: Concurrent: Logger] private (stripe: Stripe[F]) extends Http4sDsl[F] {
 
-  object LimitQueryParam extends OptionalQueryParamDecoderMatcher[Int]("limit")
+  object LimitQueryParam  extends OptionalQueryParamDecoderMatcher[Int]("limit")
   object OffsetQueryParam extends OptionalQueryParamDecoderMatcher[Int]("offset")
 
   ////////// stripe endpoints
@@ -28,26 +32,30 @@ class StripeRoutes[F[_]: Concurrent: Logger] private (stripe: Stripe[F]) extends
   private val promotedJobRoute = AuthedRoutes.of[User, F] {
     // create-checkout-session
     case req @ POST -> Root / "promoted" as user =>
-      req.req.as[JobInfo].flatMap { jobInfo =>
-        for {
-          session <- stripe
-            .createCheckoutSession("".toString, user.email)
-          resp <- session
-            .map(sesh => Ok(sesh.getUrl))
-            .getOrElse(NotFound()) // can be a 303 redirect
-        } yield resp
-      }
+      req
+        .req
+        .as[JobInfo]
+        .flatMap { jobInfo =>
+          for {
+            session <- stripe.createCheckoutSession("".toString, user.email)
+            resp    <- session.map(sesh => Ok(sesh.getUrl)).getOrElse(NotFound()) // can be a 303 redirect
+          } yield resp
+        }
 
     case req @ POST -> Root / "create-payment-intent" as user =>
-      req.req.bodyText.compile.string.flatMap { amount =>
-        for {
-          paymentIntent <- stripe
-            .createPaymentIntent(amount.toLong)
-          resp <- paymentIntent
-            .map(paymentInt => Ok(paymentInt.getClientSecret()))
-            .getOrElse(NotFound())
-        } yield resp
-      }
+      req
+        .req
+        .bodyText
+        .compile
+        .string
+        .flatMap { amount =>
+          for {
+            paymentIntent <- stripe.createPaymentIntent(amount.toLong)
+            resp <- paymentIntent
+                      .map(paymentInt => Ok(paymentInt.getClientSecret()))
+                      .getOrElse(NotFound())
+          } yield resp
+        }
 
   }
 
@@ -62,10 +70,10 @@ class StripeRoutes[F[_]: Concurrent: Logger] private (stripe: Stripe[F]) extends
         (for {
           payload <- req.bodyText.compile.string
           handled <- stripe.handleWebhookEvent(
-            payload,
-            signature,
-            jobId => Concurrent[F].pure(jobId) /*jobs.activate(UUID.fromString(jobId))  */
-          )
+                       payload,
+                       signature,
+                       jobId => Concurrent[F].pure(jobId) /*jobs.activate(UUID.fromString(jobId))  */
+                     )
           response <-
             if (handled.nonEmpty)
               Ok() // back to stripe
@@ -86,8 +94,8 @@ class StripeRoutes[F[_]: Concurrent: Logger] private (stripe: Stripe[F]) extends
   val authedRoutes = promotedJobRoute
 
   val routes = Router(
-    "/jobs" -> (unauthedRoutes),
-    "api" -> AuthMiddleware(???).apply(authedRoutes)
+    "/jobs" -> unauthedRoutes,
+    "api"   -> AuthMiddleware(???).apply(authedRoutes)
   )
 
 }

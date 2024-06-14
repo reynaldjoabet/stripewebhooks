@@ -1,9 +1,10 @@
 package domain
 
-import io.circe.generic.semiauto.deriveCodec
-import org.http4s.circe.jsonOf
-import io.circe.Codec
 import cats.effect.Concurrent
+
+import io.circe.generic.semiauto.deriveCodec
+import io.circe.Codec
+import org.http4s.circe.jsonOf
 
 case class JobInfo(
   company: String,

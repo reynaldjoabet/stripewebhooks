@@ -1,6 +1,7 @@
+import cats.effect.IO
+
 import io.circe.generic.semiauto.deriveDecoder
 import io.circe.Decoder
-import cats.effect.IO
 
 final case class CreatePaymentIntent(
   amount: Int,
@@ -9,6 +10,7 @@ final case class CreatePaymentIntent(
 )
 
 object CreatePaymentIntent {
+
   implicit val createPaymentIntentDecoder: Decoder[CreatePaymentIntent] =
     deriveDecoder[CreatePaymentIntent]
 

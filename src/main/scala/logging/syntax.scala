@@ -1,15 +1,16 @@
 package logging
 
-import cats.MonadError
 import cats.implicits._
+import cats.MonadError
+
 import org.typelevel.log4cats.Logger
 
 object syntax {
 
   implicit class LogginOps[F[_], E, A](
     fa: F[A]
-  )(
-    implicit me: MonadError[F, E],
+  )(implicit
+    me: MonadError[F, E],
     logger: Logger[F]
   ) {
 

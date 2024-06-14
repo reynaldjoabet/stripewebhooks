@@ -1,18 +1,20 @@
 package configs
 
+import scala.reflect.ClassTag
+
 import cats.effect._
 import cats.syntax.all._
+
+import pureconfig.error.ConfigReaderException
 import pureconfig.ConfigReader
 import pureconfig.ConfigSource
-import pureconfig.error.ConfigReaderException
-import scala.reflect.ClassTag
 
 object syntax {
 
   implicit class ConfigSourceOps(val source: ConfigSource) extends AnyVal {
 
-    def loadF[F[_], A: ClassTag: ConfigReader](
-      implicit F: Concurrent[F]
+    def loadF[F[_], A: ClassTag: ConfigReader](implicit
+      F: Concurrent[F]
     ): F[A] = F
       .pure(source.load[A])
       .flatMap {

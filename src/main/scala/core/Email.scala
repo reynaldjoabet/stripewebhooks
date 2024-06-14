@@ -1,26 +1,29 @@
 package core
 
+import java.util.Properties
+
 import cats.effect._
 import cats.implicits._
-import configs.EmailServiceConfig
 
-import java.util.Properties
+import configs.EmailServiceConfig
 import javax.mail._
 import javax.mail.internet.MimeMessage
 
 trait Emails[F[_]] {
+
   def sendEmail(to: String, subject: String, content: String): F[Unit]
   def sendPasswordRecoveryEmail(to: String, token: String): F[Unit]
+
 }
 
 class LiveEmails[F[_]: MonadCancelThrow] private (emailServiceConfig: EmailServiceConfig)
-  extends Emails[F] {
+    extends Emails[F] {
 
   override def sendEmail(to: String, subject: String, content: String): F[Unit] = {
     val messageResource =
       for {
-        prop <- propsResource
-        auth <- authenticatorResource
+        prop    <- propsResource
+        auth    <- authenticatorResource
         session <- createSession(prop, auth)
         message <- createMessage(session)(sender, to, subject, content)
       } yield message
@@ -39,7 +42,7 @@ class LiveEmails[F[_]: MonadCancelThrow] private (emailServiceConfig: EmailServi
       line-height: 2;
       font-size: 20px;
     ">
-    <h1>${subject}</h1>
+    <h1>$subject</h1>
     <p>Your password recovery token: $token</p>
     <p>
       Click <a href="$frontendUrl/login">here</a> to get back to the application.
@@ -75,8 +78,10 @@ class LiveEmails[F[_]: MonadCancelThrow] private (emailServiceConfig: EmailServi
 
   private val authenticatorResource: Resource[F, Authenticator] = Resource.pure(
     new Authenticator {
+
       override protected def getPasswordAuthentication(): PasswordAuthentication =
         new PasswordAuthentication(user, pass)
+
     }
   )
 
@@ -102,6 +107,8 @@ class LiveEmails[F[_]: MonadCancelThrow] private (emailServiceConfig: EmailServi
 }
 
 object LiveEmails {
+
   def apply[F[_]: MonadCancelThrow](emailServiceConfig: EmailServiceConfig): F[LiveEmails[F]] =
     new LiveEmails[F](emailServiceConfig).pure[F]
+
 }

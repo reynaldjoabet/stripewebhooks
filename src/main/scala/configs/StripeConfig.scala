@@ -1,7 +1,7 @@
 package configs
 
-import pureconfig.ConfigReader
 import pureconfig.generic.semiauto.deriveReader
+import pureconfig.ConfigReader
 
 final case class StripeConfig(
   key: String,

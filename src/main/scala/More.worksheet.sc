@@ -1,8 +1,7 @@
 import java.util.UUID
 
-//In Cats 2.1.x type class instances were brought in scope with import cats.implicits._
-
 import cats.Show
+
 Show[Int].show(42)
 //could not find implicit value for parameter instance: cats.Show[Int]
 
@@ -33,10 +32,10 @@ import cats.Monad
 
 Monad[List]
 
+import cats.instances.future
+import cats.instances.order
 import cats.MonadError
 
-import cats.instances.order
-import cats.instances.future
 MonadError
 
 Show[UUID].show(UUID.randomUUID())
@@ -47,5 +46,5 @@ val person = Person("John", 12)
 
 val Person(name, age) = person
 
-
-"CACF51660E6BF90F4E63B8A45BADF2756D9D9160E7FC926A6FB9A641B068A99E-1708603042997-071242F4C84B06FA522B6F84D9D36710F5E16BF7".length()
+"CACF51660E6BF90F4E63B8A45BADF2756D9D9160E7FC926A6FB9A641B068A99E-1708603042997-071242F4C84B06FA522B6F84D9D36710F5E16BF7"
+  .length()

@@ -2,15 +2,16 @@ import io.circe.Decoder
 sealed abstract class StripePaymentMethodType
 
 object StripePaymentMethodType {
-  case object alipay extends StripePaymentMethodType
+
+  case object alipay     extends StripePaymentMethodType
   case object wechat_pay extends StripePaymentMethodType
-  case object promptpay extends StripePaymentMethodType
-  case object pix extends StripePaymentMethodType
-  case object card extends StripePaymentMethodType
-  case object cashapp extends StripePaymentMethodType
-  case object grabpay extends StripePaymentMethodType
-  case object paynow extends StripePaymentMethodType
-  case object paypal extends StripePaymentMethodType
+  case object promptpay  extends StripePaymentMethodType
+  case object pix        extends StripePaymentMethodType
+  case object card       extends StripePaymentMethodType
+  case object cashapp    extends StripePaymentMethodType
+  case object grabpay    extends StripePaymentMethodType
+  case object paynow     extends StripePaymentMethodType
+  case object paypal     extends StripePaymentMethodType
 
   implicit val stripePaymentMethodTypeDecoder: Decoder[StripePaymentMethodType] = Decoder[String]
     .emap[StripePaymentMethodType] {

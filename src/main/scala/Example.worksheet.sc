@@ -19,7 +19,7 @@ val list2: List[Int] = List(4, 5, 6)
 val combinedLists: List[Int] = list1 |+| list2
 
 // Example 3: Using Applicative syntax
-val maybeInt: Option[Int] = 42.pure[Option]
+val maybeInt: Option[Int]       = 42.pure[Option]
 val maybeString: Option[String] = "hello".pure[Option]
 
 //In most cases all that's necessary to switch to using the new implicit scope instances is to replace cats.implicits._ imports with cats.syntax.all._ and delete any cats.instances imports.

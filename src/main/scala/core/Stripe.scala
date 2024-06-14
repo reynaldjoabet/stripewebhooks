@@ -1,26 +1,33 @@
 package core
 
-import cats._
-import cats.implicits._
-import com.stripe.model.checkout.Session
-import com.stripe.net.Webhook
-import com.stripe.param.checkout.SessionCreateParams
-import com.stripe.{Stripe => TheStripe}
-import configs.StripeConfig
-
-import org.typelevel.log4cats.Logger
-import logging.syntax._
 import scala.jdk.OptionConverters._
 import scala.util.Try
+
+import cats._
+import cats.implicits._
+
+import com.stripe.{Stripe => TheStripe}
+import com.stripe.model.checkout.Session
 import com.stripe.model.PaymentIntent
+import com.stripe.net.Webhook
+import com.stripe.param.checkout.SessionCreateParams
 import com.stripe.param.PaymentIntentCreateParams
+import configs.StripeConfig
+import logging.syntax._
+import org.typelevel.log4cats.Logger
 
 trait Stripe[F[_]] {
+
   def createCheckoutSession(jobId: String, userEmail: String): F[Option[Session]]
-  def handleWebhookEvent[A](payload: String, signature: String, action: String => F[A])
-    : F[Option[A]]
+
+  def handleWebhookEvent[A](
+    payload: String,
+    signature: String,
+    action: String => F[A]
+  ): F[Option[A]]
 
   def createPaymentIntent(amount: Long): F[Option[PaymentIntent]]
+
 }
 
 class LiveStripe[F[_]: MonadThrow: Logger] private (
@@ -47,16 +54,11 @@ class LiveStripe[F[_]: MonadThrow: Logger] private (
       )
       // used by Stripe to redirect the customer to from the checkout page
       .setSuccessUrl(s"$successUrl/$jobId") // YOUR_DOMAIN+'success.html'
-      .setCancelUrl(cancelUrl) // YOUR_DOMAIN+'cancel.html'
+      .setCancelUrl(cancelUrl)              // YOUR_DOMAIN+'cancel.html'
       .setCustomerEmail(userEmail)
       .setClientReferenceId(jobId) // from our database
       .addLineItem(
-        SessionCreateParams
-          .LineItem
-          .builder()
-          .setQuantity(1L)
-          .setPrice(price)
-          .build()
+        SessionCreateParams.LineItem.builder().setQuantity(1L).setPrice(price).build()
       )
       .build()
       .pure[F]
@@ -83,8 +85,11 @@ class LiveStripe[F[_]: MonadThrow: Logger] private (
       .logError(error => s"Creating checkout session failed: $error")
       .recover { case _ => None }
 
-  override def handleWebhookEvent[A](payload: String, signature: String, action: String => F[A])
-    : F[Option[A]] = MonadThrow[F]
+  override def handleWebhookEvent[A](
+    payload: String,
+    signature: String,
+    action: String => F[A]
+  ): F[Option[A]] = MonadThrow[F]
     .fromTry(Try(Webhook.constructEvent(payload, signature, webhookSecret)))
     .logError(e => s"Stripe security verification failed - possibly fake attempt")
     .flatMap { event =>

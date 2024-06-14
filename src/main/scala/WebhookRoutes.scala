@@ -1,42 +1,43 @@
-import com.stripe.model.WebhookEndpoint
-import org.http4s.dsl.Http4sDsl
-import cats.effect.IO
-import org.http4s.HttpRoutes
-import com.stripe.Stripe
-import org.typelevel.ci._
-import com.stripe.exception.SignatureVerificationException;
-import com.stripe.model._
-import com.stripe.net.Webhook
-import scala.util.Try
-import fs2.text.utf8
-import com.google.gson.JsonSyntaxException
-import org.http4s.multipart.Multipart
-import org.http4s.multipart.Multiparts
-import org.http4s.multipart.MultipartParser
-import org.http4s.multipart.MultipartDecoder
-import com.stripe.net.MultipartProcessor
-import org.http4s.circe.CirceEntityDecoder._
-import org.http4s.circe.streamJsonArrayEncoder
-import org.http4s.circe.CirceEntityEncoder._
-import com.stripe.param.PaymentIntentCreateParams
-
-import cats.syntax.all._
-import cats.effect.std.Console
-import cats.effect.kernel.Async
-import cats.data.NonEmptyList
-import org.http4s.Header
 import scala.jdk.CollectionConverters._
+import scala.util.Try
+
 import cats.data.Kleisli
-import org.http4s.Request
-import org.http4s.headers.Authorization
-import org.http4s.BasicCredentials
-import org.http4s.Credentials.AuthParams
-import org.http4s.Credentials
+import cats.data.NonEmptyList
+import cats.effect.kernel.Async
+import cats.effect.std.Console
 import cats.effect.syntax.all._
+import cats.effect.IO
+import cats.syntax.all._
+import fs2.text.utf8
+
+import com.google.gson.JsonSyntaxException
+import com.stripe.exception.SignatureVerificationException
+import com.stripe.model._
+import com.stripe.model.WebhookEndpoint
+import com.stripe.net.MultipartProcessor
+import com.stripe.net.Webhook
+import com.stripe.param.PaymentIntentCreateParams
+import com.stripe.Stripe
+import org.http4s.circe.streamJsonArrayEncoder
+import org.http4s.circe.CirceEntityDecoder._
+import org.http4s.circe.CirceEntityEncoder._
+import org.http4s.dsl.Http4sDsl
+import org.http4s.headers.Authorization
+import org.http4s.multipart.Multipart
+import org.http4s.multipart.MultipartDecoder
+import org.http4s.multipart.MultipartParser
+import org.http4s.multipart.Multiparts
+import org.http4s.BasicCredentials
+import org.http4s.Credentials
+import org.http4s.Credentials.AuthParams
+import org.http4s.Header
+import org.http4s.HttpRoutes
+import org.http4s.Request
+import org.typelevel.ci._
 
 //import CreatePaymentIntent._
 case class WebhookRoutes[F[_]: Async: Console](stripeCredentials: StripeCredentials)
-  extends Http4sDsl[F] {
+    extends Http4sDsl[F] {
 
   sealed trait MissingStripeSignatureException extends Throwable
 
@@ -110,8 +111,8 @@ case class WebhookRoutes[F[_]: Async: Console](stripeCredentials: StripeCredenti
   // val webhookHandler= ???
   val stripeRoute = HttpRoutes.of[F] {
     case request @ POST -> Root / "webhook" =>
-      val payload = request.body.through(utf8.decode).compile.string
-      val payload1 = request.bodyText.compile.string
+      val payload   = request.body.through(utf8.decode).compile.string
+      val payload1  = request.bodyText.compile.string
       val sigHeader = request.headers.get(ci"Stripe-Signature").get.head
 
       val sigHeader1: F[NonEmptyList[Header.Raw]] = Async[F].fromOption(
@@ -125,24 +126,24 @@ case class WebhookRoutes[F[_]: Async: Console](stripeCredentials: StripeCredenti
 
       val event1: F[Event] =
         for {
-          body <- payload1
+          body           <- payload1
           endpointSecret <- EndpointSecret.secret.load[F]
-          apiKey <- StripeAPIKey.apiKey.load[F]
+          apiKey         <- StripeAPIKey.apiKey.load[F]
           event <- Async[F].fromTry(
-            Try(Webhook.constructEvent(body, sigHeader.value, endpointSecret.value))
-          )
+                     Try(Webhook.constructEvent(body, sigHeader.value, endpointSecret.value))
+                   )
         } yield event
 
       val event =
         for {
-          body <- payload1
+          body           <- payload1
           endpointSecret <- EndpointSecret.secret.load[F]
-          header <- sigHeader1
-          apiKey <- StripeAPIKey.apiKey.load[F]
-          _ <- Async[F].delay(Stripe.apiKey = apiKey.value)
+          header         <- sigHeader1
+          apiKey         <- StripeAPIKey.apiKey.load[F]
+          _              <- Async[F].delay(Stripe.apiKey = apiKey.value)
           event <- Async[F].delay(
-            Webhook.constructEvent(body, header.head.value, endpointSecret.value)
-          )
+                     Webhook.constructEvent(body, header.head.value, endpointSecret.value)
+                   )
 
         } yield event
 
@@ -176,8 +177,7 @@ case class WebhookRoutes[F[_]: Async: Console](stripeCredentials: StripeCredenti
                 StripePaymentMethodType.promptpay,
                 StripePaymentMethodType.card
               ).map(_.toString()).asJava
-            )
-            .build()
+            ).build()
           val paymentIntent = PaymentIntent.create(paymentIntentParams)
 
           Ok(CreatePaymentIntentResponse(paymentIntent.getClientSecret())) // .map(_)
@@ -190,8 +190,8 @@ case class WebhookRoutes[F[_]: Async: Console](stripeCredentials: StripeCredenti
     val authHeader = req.headers.get[Authorization]
     authHeader match {
       case Some(Authorization(BasicCredentials(cred))) => Async[F].delay(Right("User found"))
-      case Some(_) => Async[F].delay(Left("No basic credentials"))
-      case None    => Async[F].delay(Left("unauthorized"))
+      case Some(_)                                     => Async[F].delay(Left("No basic credentials"))
+      case None                                        => Async[F].delay(Left("unauthorized"))
     }
 
     authHeader match {
