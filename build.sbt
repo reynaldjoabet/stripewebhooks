@@ -2,7 +2,7 @@ ThisBuild / version := "0.1.0-SNAPSHOT"
 
 ThisBuild / scalaVersion := "2.13.12"
 
-val http4sVersion                      = "0.23.16"
+val http4sVersion                      = "0.23.27"
 val cirisVersion                       = "3.1.0"
 val circeVersion                       = "0.14.3"
 val stripeversion                      = "22.18.0"
@@ -74,4 +74,4 @@ scalacOptions += "-release:17" // ensures the Scala compiler generates bytecode 
 // )
 
 ThisBuild / semanticdbEnabled := true
-ThisBuild/usePipelining := true
+ThisBuild / usePipelining     := true
