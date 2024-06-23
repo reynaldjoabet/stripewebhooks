@@ -37,9 +37,9 @@ val security = Seq(
   "com.auth0"      % "java-jwt"   % jwtVersion
 )
 
-val pureconfig = "com.github.pureconfig" %% "pureconfig" % "0.17.5"
+val pureconfig = "com.github.pureconfig" %% "pureconfig" % "0.17.7"
 
-val pureconfigGeneric = "com.github.pureconfig" %% "pureconfig-generic" % "0.17.5" % Test
+val pureconfigGeneric = "com.github.pureconfig" %% "pureconfig-generic" % "0.17.7" % Test
 
 val javaMail = "com.sun.mail" % "javax.mail" % javaMailVersion
 
