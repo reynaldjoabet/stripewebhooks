@@ -74,4 +74,4 @@ scalacOptions += "-release:17" // ensures the Scala compiler generates bytecode 
 // )
 
 ThisBuild / semanticdbEnabled := true
-ThisBuild/usePipelining := true
+ThisBuild / usePipelining     := true
