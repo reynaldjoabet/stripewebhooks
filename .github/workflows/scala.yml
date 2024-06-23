@@ -14,7 +14,7 @@ jobs:
     strategy:
       matrix:
         os: ["ubuntu-latest", "macos-latest"]
-        scala: [2.13.14,3.4.2]
+        scala: [2.13.13,3.4.2]
         java: [temurin@17]
     runs-on: ${{matrix.os}}
 
