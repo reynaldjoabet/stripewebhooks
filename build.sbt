@@ -10,7 +10,7 @@ val catsEffectVersion                  = "3.4.8"
 val fs2Version                         = "3.6.1"
 val jwtVersion                         = "4.4.0"
 val logbackVersion                     = "1.4.7"
-val password4jVersion                  = "1.7.0"
+val password4jVersion                  = "1.7.3"
 val javaMailVersion                    = "1.6.2"
 def circe(artifact: String): ModuleID  = "io.circe"   %% s"circe-$artifact"  % circeVersion
 def ciris(artifact: String): ModuleID  = "is.cir"     %% artifact            % cirisVersion
@@ -74,4 +74,4 @@ scalacOptions += "-release:17" // ensures the Scala compiler generates bytecode 
 // )
 
 ThisBuild / semanticdbEnabled := true
-ThisBuild/usePipelining := true
+ThisBuild / usePipelining     := true
