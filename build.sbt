@@ -3,9 +3,11 @@ ThisBuild / version := "0.1.0-SNAPSHOT"
 ThisBuild / scalaVersion := "2.13.13"
 
 val http4sVersion                      = "0.23.16"
+
 val cirisVersion                       = "3.6.0"
-val circeVersion                       = "0.14.3"
+val circeVersion                       = "0.14.8"
 val stripeversion                      = "22.31.0"
+
 val catsEffectVersion                  = "3.4.8"
 val fs2Version                         = "3.10.2"
 val jwtVersion                         = "4.4.0"
