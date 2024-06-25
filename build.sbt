@@ -2,19 +2,22 @@ ThisBuild / version := "0.1.0-SNAPSHOT"
 
 ThisBuild / scalaVersion := "2.13.13"
 
-val http4sVersion                      = "0.23.16"
-val cirisVersion                       = "3.6.0"
-val circeVersion                       = "0.14.3"
+val http4sVersion                      = "0.23.27"
 
-val stripeversion                      = "22.18.0"
+val cirisVersion                       = "3.6.0"
+
+val circeVersion                       = "0.14.8"
+val stripeversion                      = "22.31.0"
+
 val catsEffectVersion                  = "3.4.11"
 
-val stripeversion                      = "22.31.0"
 val fs2Version                         = "3.10.2"
 
 val jwtVersion                         = "4.4.0"
+
 val logbackVersion                     = "1.4.14"
-val password4jVersion                  = "1.7.0"
+val password4jVersion                  = "1.7.3"
+
 val javaMailVersion                    = "1.6.2"
 def circe(artifact: String): ModuleID  = "io.circe"   %% s"circe-$artifact"  % circeVersion
 def ciris(artifact: String): ModuleID  = "is.cir"     %% artifact            % cirisVersion
